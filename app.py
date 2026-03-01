@@ -76,21 +76,23 @@ for msg in st.session_state.messages:
         st.markdown(msg["content"])
 
 # --- Chat Input ---
+# --- Chat Input ---
 if prompt := st.chat_input("Ask a question (e.g., 'How many deals are in the Railways sector?')"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.status(" Gemini is thinking...", expanded=True) as status:
+        # 1. The Status Box (Only for the "Thinking" and Tool actions)
+        with st.status("🧠 Gemini is thinking...", expanded=True) as status:
             try:
-                # Gemini natively decides to call the tool, waits for the data, and generates the answer
                 response = st.session_state.chat_session.send_message(prompt)
-                
                 status.update(label="Analysis Complete!", state="complete", expanded=False)
-                st.markdown(response.text)
-                st.session_state.messages.append({"role": "assistant", "content": response.text})
-            
             except Exception as e:
                 status.update(label="Error Occurred", state="error")
                 st.error(f"API Error: {e}")
+                st.stop() # Stops the code here if there's an error
+        
+        # 2. The Final Answer (Placed OUTSIDE the status box so it is directly visible!)
+        st.markdown(response.text)
+        st.session_state.messages.append({"role": "assistant", "content": response.text})
